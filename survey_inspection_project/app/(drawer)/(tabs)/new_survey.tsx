@@ -12,9 +12,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useAppContext } from '@/context/AppContext';
 
 export default function NewSurveyScreen() {
   const router = useRouter();
+  const { addSurvey } = useAppContext();
 
   // Form State
   const [siteName, setSiteName] = useState('');
@@ -53,7 +55,15 @@ export default function NewSurveyScreen() {
 
   const handleSubmit = () => {
     if (validateForm()) {
-      // Logic to submit survey would go here
+      addSurvey({
+        id: Math.random().toString(36).substring(2, 11),
+        siteName,
+        clientName,
+        date,
+        priority: priority as 'High' | 'Medium' | 'Low',
+        description,
+      });
+
       Alert.alert(
         'Success',
         'Survey has been created successfully!',

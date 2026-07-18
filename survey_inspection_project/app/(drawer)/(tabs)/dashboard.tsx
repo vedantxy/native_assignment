@@ -3,10 +3,15 @@ import { View, Text, StyleSheet, ScrollView, Pressable, SafeAreaView } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useNavigation } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
+import { useAppContext } from '@/context/AppContext';
 
 export default function DashboardScreen() {
   const router = useRouter();
   const navigation = useNavigation();
+  const { surveys, profile } = useAppContext();
+  
+  const highPriorityCount = surveys.filter(s => s.priority === 'High').length;
+  const recentSurveys = surveys.slice(0, 2);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -33,22 +38,22 @@ export default function DashboardScreen() {
             <Ionicons name="person" size={32} color="#fff" />
           </View>
           <View style={styles.studentInfo}>
-            <Text style={styles.studentName}>Jane Doe</Text>
-            <Text style={styles.studentDetails}>ID: CS-2024-001 • Computer Science</Text>
+            <Text style={styles.studentName}>{profile.name}</Text>
+            <Text style={styles.studentDetails}>ID: {profile.employeeId}</Text>
           </View>
         </View>
 
-        {/* Today's Survey Count */}
+        {/* Stats */}
         <View style={styles.statsContainer}>
           <View style={[styles.statCard, { backgroundColor: '#E3F2FD' }]}>
             <Ionicons name="document-text" size={32} color="#1E88E5" />
-            <Text style={styles.statNumber}>12</Text>
-            <Text style={styles.statLabel}>Today's Surveys</Text>
+            <Text style={styles.statNumber}>{surveys.length}</Text>
+            <Text style={styles.statLabel}>Total Surveys</Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: '#E8F5E9' }]}>
-            <Ionicons name="checkmark-done-circle" size={32} color="#43A047" />
-            <Text style={styles.statNumber}>8</Text>
-            <Text style={styles.statLabel}>Completed</Text>
+          <View style={[styles.statCard, { backgroundColor: '#FFEBEE' }]}>
+            <Ionicons name="alert-circle" size={32} color="#E53935" />
+            <Text style={styles.statNumber}>{highPriorityCount}</Text>
+            <Text style={styles.statLabel}>High Priority</Text>
           </View>
         </View>
 
@@ -99,30 +104,24 @@ export default function DashboardScreen() {
         {/* Recent Survey Summary */}
         <Text style={styles.sectionTitle}>Recent Surveys</Text>
         <View style={styles.recentContainer}>
-          <View style={styles.recentItem}>
-            <View style={styles.recentIcon}>
-              <Ionicons name="map" size={24} color="#666" />
+          {recentSurveys.length > 0 ? recentSurveys.map(survey => (
+            <View key={survey.id} style={styles.recentItem}>
+              <View style={styles.recentIcon}>
+                <Ionicons name="map" size={24} color="#666" />
+              </View>
+              <View style={styles.recentDetails}>
+                <Text style={styles.recentTitle}>{survey.siteName}</Text>
+                <Text style={styles.recentDate}>{survey.date}</Text>
+              </View>
+              <View style={survey.priority === 'High' ? styles.statusBadgePending : styles.statusBadge}>
+                <Text style={survey.priority === 'High' ? styles.statusTextPending : styles.statusText}>
+                  {survey.priority}
+                </Text>
+              </View>
             </View>
-            <View style={styles.recentDetails}>
-              <Text style={styles.recentTitle}>Site A Inspection</Text>
-              <Text style={styles.recentDate}>Today, 10:30 AM</Text>
-            </View>
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusText}>Done</Text>
-            </View>
-          </View>
-          <View style={styles.recentItem}>
-            <View style={styles.recentIcon}>
-              <Ionicons name="map" size={24} color="#666" />
-            </View>
-            <View style={styles.recentDetails}>
-              <Text style={styles.recentTitle}>Client B Evaluation</Text>
-              <Text style={styles.recentDate}>Yesterday, 2:15 PM</Text>
-            </View>
-            <View style={styles.statusBadgePending}>
-              <Text style={styles.statusTextPending}>Pending</Text>
-            </View>
-          </View>
+          )) : (
+            <Text style={{ textAlign: 'center', color: '#666', padding: 10 }}>No recent surveys.</Text>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
