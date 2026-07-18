@@ -3,7 +3,9 @@ import { View, Text, StyleSheet } from 'react-native';
 export default function ContactsScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Contacts</Text>
+      <Text style={styles.title}>contacts</Text>
+
+      
     </View>
   );
 }
