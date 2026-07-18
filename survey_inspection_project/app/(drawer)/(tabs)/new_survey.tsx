@@ -8,9 +8,11 @@ import {
   Pressable, 
   Alert,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useAppContext } from '@/context/AppContext';
 
@@ -24,6 +26,7 @@ export default function NewSurveyScreen() {
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('Medium'); // Default
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]); // Default to today's date
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
 
   // Validation State
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -62,6 +65,7 @@ export default function NewSurveyScreen() {
         date,
         priority: priority as 'High' | 'Medium' | 'Low',
         description,
+        photoUri: photoUri || undefined,
       });
 
       Alert.alert(
@@ -76,6 +80,7 @@ export default function NewSurveyScreen() {
               setClientName('');
               setDescription('');
               setPriority('Medium');
+              setPhotoUri(null);
               setErrors({});
               router.push('/(drawer)/(tabs)/dashboard');
             } 
@@ -105,6 +110,40 @@ export default function NewSurveyScreen() {
       </Text>
     </Pressable>
   );
+
+  const takePhoto = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (permissionResult.granted === false) {
+      Alert.alert("Permission Refused", "You've refused to allow this app to access your camera!");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  };
+
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.granted === false) {
+      Alert.alert("Permission Refused", "You've refused to allow this app to access your photos!");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  };
 
   return (
     <KeyboardAvoidingView 
@@ -180,6 +219,31 @@ export default function NewSurveyScreen() {
               <PriorityButton level="Medium" color="#FF9800" />
               <PriorityButton level="High" color="#F44336" />
             </View>
+          </View>
+
+          {/* Inspection Photo */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Inspection Photo</Text>
+            
+            {photoUri ? (
+              <View style={styles.imagePreviewContainer}>
+                <Image source={{ uri: photoUri }} style={styles.previewImage} />
+                <Pressable style={styles.removeImageButton} onPress={() => setPhotoUri(null)}>
+                  <Ionicons name="close-circle" size={24} color="#EF4444" />
+                </Pressable>
+              </View>
+            ) : (
+              <View style={styles.photoButtonsContainer}>
+                <Pressable style={styles.photoButton} onPress={takePhoto}>
+                  <Ionicons name="camera-outline" size={24} color="#4F46E5" />
+                  <Text style={styles.photoButtonText}>Take Photo</Text>
+                </Pressable>
+                <Pressable style={styles.photoButton} onPress={pickImage}>
+                  <Ionicons name="image-outline" size={24} color="#4F46E5" />
+                  <Text style={styles.photoButtonText}>Gallery</Text>
+                </Pressable>
+              </View>
+            )}
           </View>
 
           {/* Description */}
@@ -335,4 +399,45 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginRight: 8,
   },
+  photoButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  photoButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 52,
+    backgroundColor: '#EEF2FF',
+    borderWidth: 1,
+    borderColor: '#4F46E5',
+    borderRadius: 12,
+  },
+  photoButtonText: {
+    marginLeft: 8,
+    color: '#4F46E5',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  imagePreviewContainer: {
+    position: 'relative',
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#F0F0F0',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 2,
+  }
 });

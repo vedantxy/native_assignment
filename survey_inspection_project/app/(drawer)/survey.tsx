@@ -10,26 +10,19 @@ import {
   SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useAppContext } from '@/context/AppContext';
 
 export default function SurveyPreviewScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams();
+  const { surveys } = useAppContext();
 
-  // Mock data for the survey preview
-  const surveyData = {
-    siteName: 'Downtown Commercial Plaza',
-    clientName: 'Acme Corp',
-    contact: '+1 (555) 987-6543',
-    location: 'Lat: 40.7128, Lon: -74.0060',
-    priority: 'High',
-    date: new Date().toISOString().split('T')[0],
-    notes: 'The main entrance lobby shows signs of water damage near the west wall. Needs immediate maintenance scheduling. Structural integrity seems fine otherwise.',
-    photoUri: 'https://images.unsplash.com/photo-1541888086425-d81bb19240f5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  };
+  // Find the selected survey, or default to the first one if navigated directly without an id
+  const surveyData = surveys.find(s => s.id === id) || surveys[0];
 
   const handleEdit = () => {
-    // Navigate back to the creation form (assuming it's in the tabs)
-    router.push('/(drawer)/(tabs)/new_survey');
+    Alert.alert("Coming Soon", "Edit functionality will be available in a future update.");
   };
 
   const handleSubmit = () => {
@@ -44,6 +37,20 @@ export default function SurveyPreviewScreen() {
       ]
     );
   };
+
+  if (!surveyData) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.emptyStateContainer}>
+          <Ionicons name="document-text-outline" size={60} color="#D1D5DB" />
+          <Text style={styles.emptyStateText}>No survey data found.</Text>
+          <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <Text style={styles.backButtonText}>Go Back</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -81,23 +88,6 @@ export default function SurveyPreviewScreen() {
           </View>
         </View>
 
-        {/* Location & Contact */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="map" size={20} color="#10B981" />
-            <Text style={styles.cardTitle}>Location & Contact</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.row}>
-            <Text style={styles.label}>Location:</Text>
-            <Text style={styles.value}>{surveyData.location}</Text>
-          </View>
-          <View style={[styles.row, { borderBottomWidth: 0 }]}>
-            <Text style={styles.label}>Contact:</Text>
-            <Text style={styles.value}>{surveyData.contact}</Text>
-          </View>
-        </View>
-
         {/* Inspection Photo */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
@@ -105,10 +95,17 @@ export default function SurveyPreviewScreen() {
             <Text style={styles.cardTitle}>Inspection Photo</Text>
           </View>
           <View style={styles.divider} />
-          <Image 
-            source={{ uri: surveyData.photoUri }} 
-            style={styles.previewImage}
-          />
+          {surveyData.photoUri ? (
+            <Image 
+              source={{ uri: surveyData.photoUri }} 
+              style={styles.previewImage}
+            />
+          ) : (
+            <View style={styles.noPhotoContainer}>
+              <Ionicons name="image-outline" size={40} color="#D1D5DB" />
+              <Text style={styles.noPhotoText}>No photo attached</Text>
+            </View>
+          )}
         </View>
 
         {/* Notes */}
@@ -118,7 +115,7 @@ export default function SurveyPreviewScreen() {
             <Text style={styles.cardTitle}>Notes / Findings</Text>
           </View>
           <View style={styles.divider} />
-          <Text style={styles.notesText}>{surveyData.notes}</Text>
+          <Text style={styles.notesText}>{surveyData.description}</Text>
         </View>
 
         {/* Action Buttons */}
@@ -206,6 +203,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#1A1A1A',
     fontWeight: '600',
+    flex: 1,
+    textAlign: 'right',
+    paddingLeft: 20,
   },
   badge: {
     backgroundColor: '#FEE2E2',
@@ -223,6 +223,23 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 12,
     backgroundColor: '#F0F0F0',
+  },
+  noPhotoContainer: {
+    width: '100%',
+    height: 150,
+    borderRadius: 12,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noPhotoText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#9CA3AF',
+    fontWeight: '500',
   },
   notesText: {
     fontSize: 15,
@@ -272,4 +289,26 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 8,
   },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyStateText: {
+    marginTop: 15,
+    fontSize: 16,
+    color: '#6B7280',
+    marginBottom: 20,
+  },
+  backButton: {
+    backgroundColor: '#4F46E5',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  backButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  }
 });

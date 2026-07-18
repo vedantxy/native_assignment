@@ -7,6 +7,7 @@ export type Survey = {
   date: string;
   priority: 'High' | 'Medium' | 'Low';
   description: string;
+  photoUri?: string;
 };
 
 export type ProfileData = {

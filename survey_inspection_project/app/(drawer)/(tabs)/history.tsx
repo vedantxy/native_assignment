@@ -59,9 +59,9 @@ export default function HistoryScreen() {
     );
   };
 
-  const handleViewDetails = () => {
-    // Navigate to the preview/details screen
-    router.push('/(drawer)/survey');
+  const handleViewDetails = (id: string) => {
+    // Navigate to the preview/details screen with id
+    router.push({ pathname: '/(drawer)/survey', params: { id } });
   };
 
   const getPriorityColor = (priority: string) => {
@@ -76,7 +76,7 @@ export default function HistoryScreen() {
   const renderSurveyItem = ({ item }: { item: Survey }) => (
     <Pressable 
       style={styles.card} 
-      onPress={handleViewDetails}
+      onPress={() => handleViewDetails(item.id)}
     >
       <View style={styles.cardHeader}>
         <View style={styles.cardTitleContainer}>
@@ -104,7 +104,7 @@ export default function HistoryScreen() {
       <View style={styles.cardFooter}>
         <Pressable 
           style={styles.viewButton} 
-          onPress={handleViewDetails}
+          onPress={() => handleViewDetails(item.id)}
         >
           <Text style={styles.viewButtonText}>View Details</Text>
         </Pressable>
