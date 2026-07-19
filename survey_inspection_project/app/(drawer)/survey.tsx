@@ -3,20 +3,25 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  ScrollView, 
-  Pressable, 
   Image,
-  Alert,
-  SafeAreaView
+  Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAppContext } from '@/context/AppContext';
+import { useTheme } from '../../context/ThemeContext';
+import { ScreenContainer } from '../../components/ScreenContainer';
+import { AppCard } from '../../components/AppCard';
+import { SectionHeader } from '../../components/SectionHeader';
+import { AppBadge } from '../../components/AppBadge';
+import { AppButton } from '../../components/AppButton';
+import { EmptyState } from '../../components/EmptyState';
 
 export default function SurveyPreviewScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { surveys } = useAppContext();
+  const { theme } = useTheme();
 
   // Find the selected survey, or default to the first one if navigated directly without an id
   const surveyData = surveys.find(s => s.id === id) || surveys[0];
@@ -40,135 +45,119 @@ export default function SurveyPreviewScreen() {
 
   if (!surveyData) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <ScreenContainer scrollable={false}>
         <View style={styles.emptyStateContainer}>
-          <Ionicons name="document-text-outline" size={60} color="#D1D5DB" />
-          <Text style={styles.emptyStateText}>No survey data found.</Text>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Go Back</Text>
-          </Pressable>
+          <EmptyState 
+            title="No survey data found" 
+            message="We couldn't find the survey you're looking for." 
+            icon="document-text-outline"
+          />
+          <AppButton 
+            title="Go Back" 
+            onPress={() => router.back()} 
+            style={{ marginTop: 20, alignSelf: 'center' }}
+          />
         </View>
-      </SafeAreaView>
+      </ScreenContainer>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
-        
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Survey Preview</Text>
-          <Text style={styles.headerSubtitle}>Review details before submission</Text>
+    <ScreenContainer scrollable>
+      <SectionHeader 
+        title="Survey Preview" 
+        subtitle="Review details before submission" 
+      />
+
+      {/* Site & Client Details */}
+      <AppCard style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Ionicons name="business" size={20} color={theme.colors.primary} />
+          <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Site Details</Text>
         </View>
-
-        {/* Site & Client Details */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="business" size={20} color="#4F46E5" />
-            <Text style={styles.cardTitle}>Site Details</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.row}>
-            <Text style={styles.label}>Site Name:</Text>
-            <Text style={styles.value}>{surveyData.siteName}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Client:</Text>
-            <Text style={styles.value}>{surveyData.clientName}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Date:</Text>
-            <Text style={styles.value}>{surveyData.date}</Text>
-          </View>
-          <View style={[styles.row, { borderBottomWidth: 0 }]}>
-            <Text style={styles.label}>Priority:</Text>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{surveyData.priority}</Text>
-            </View>
-          </View>
+        <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+        <View style={[styles.row, { borderBottomColor: theme.colors.surface }]}>
+          <Text style={[styles.label, { color: theme.colors.textMuted }]}>Site Name:</Text>
+          <Text style={[styles.value, { color: theme.colors.text }]}>{surveyData.siteName}</Text>
         </View>
+        <View style={[styles.row, { borderBottomColor: theme.colors.surface }]}>
+          <Text style={[styles.label, { color: theme.colors.textMuted }]}>Client:</Text>
+          <Text style={[styles.value, { color: theme.colors.text }]}>{surveyData.clientName}</Text>
+        </View>
+        <View style={[styles.row, { borderBottomColor: theme.colors.surface }]}>
+          <Text style={[styles.label, { color: theme.colors.textMuted }]}>Date:</Text>
+          <Text style={[styles.value, { color: theme.colors.text }]}>{surveyData.date}</Text>
+        </View>
+        <View style={[styles.row, { borderBottomWidth: 0 }]}>
+          <Text style={[styles.label, { color: theme.colors.textMuted }]}>Priority:</Text>
+          <AppBadge 
+            label={surveyData.priority} 
+            variant={
+              surveyData.priority === 'High' ? 'danger' :
+              surveyData.priority === 'Medium' ? 'warning' : 'success'
+            } 
+          />
+        </View>
+      </AppCard>
 
-        {/* Inspection Photo */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="camera" size={20} color="#F59E0B" />
-            <Text style={styles.cardTitle}>Inspection Photo</Text>
+      {/* Inspection Photo */}
+      <AppCard style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Ionicons name="camera" size={20} color={theme.colors.warning} />
+          <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Inspection Photo</Text>
+        </View>
+        <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+        {surveyData.photoUri ? (
+          <Image 
+            source={{ uri: surveyData.photoUri }} 
+            style={[styles.previewImage, { backgroundColor: theme.colors.surface }]}
+          />
+        ) : (
+          <View style={[styles.noPhotoContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+            <Ionicons name="image-outline" size={40} color={theme.colors.border} />
+            <Text style={[styles.noPhotoText, { color: theme.colors.textMuted }]}>No photo attached</Text>
           </View>
-          <View style={styles.divider} />
-          {surveyData.photoUri ? (
-            <Image 
-              source={{ uri: surveyData.photoUri }} 
-              style={styles.previewImage}
-            />
-          ) : (
-            <View style={styles.noPhotoContainer}>
-              <Ionicons name="image-outline" size={40} color="#D1D5DB" />
-              <Text style={styles.noPhotoText}>No photo attached</Text>
-            </View>
-          )}
+        )}
+      </AppCard>
+
+      {/* Notes */}
+      <AppCard style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Ionicons name="document-text" size={20} color={theme.colors.success} />
+          <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Notes / Findings</Text>
         </View>
+        <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+        <Text style={[styles.notesText, { color: theme.colors.text }]}>{surveyData.description}</Text>
+      </AppCard>
 
-        {/* Notes */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="document-text" size={20} color="#8B5CF6" />
-            <Text style={styles.cardTitle}>Notes / Findings</Text>
-          </View>
-          <View style={styles.divider} />
-          <Text style={styles.notesText}>{surveyData.description}</Text>
-        </View>
+      {/* Action Buttons */}
+      <View style={styles.actionContainer}>
+        <AppButton 
+          title="Edit Survey" 
+          onPress={handleEdit} 
+          variant="outline"
+          leftIcon={<Ionicons name="create-outline" size={20} color={theme.colors.primary} />}
+          style={{ flex: 1 }}
+        />
 
-        {/* Action Buttons */}
-        <View style={styles.actionContainer}>
-          <Pressable style={styles.editButton} onPress={handleEdit}>
-            <Ionicons name="create-outline" size={20} color="#4F46E5" />
-            <Text style={styles.editButtonText}>Edit Survey</Text>
-          </Pressable>
-
-          <Pressable style={styles.submitButton} onPress={handleSubmit}>
-            <Ionicons name="checkmark-circle" size={20} color="#fff" />
-            <Text style={styles.submitButtonText}>Submit Survey</Text>
-          </Pressable>
-        </View>
-
-      </ScrollView>
-    </SafeAreaView>
+        <AppButton 
+          title="Submit Survey" 
+          onPress={handleSubmit} 
+          variant="primary"
+          leftIcon={<Ionicons name="checkmark-circle" size={20} color="#fff" />}
+          style={{ flex: 1 }}
+        />
+      </View>
+      
+      <View style={{ height: 40 }} />
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  container: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  header: {
-    marginBottom: 25,
-    marginTop: 10,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#1A1A1A',
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    fontSize: 15,
-    color: '#666',
-  },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    padding: 24,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -178,73 +167,53 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1A1A1A',
     marginLeft: 10,
+    letterSpacing: -0.2,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F0F0F0',
     marginBottom: 15,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F8F9FA',
   },
   label: {
     fontSize: 15,
-    color: '#666',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   value: {
     fontSize: 15,
-    color: '#1A1A1A',
-    fontWeight: '600',
+    fontWeight: '700',
     flex: 1,
     textAlign: 'right',
     paddingLeft: 20,
   },
-  badge: {
-    backgroundColor: '#FEE2E2',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  badgeText: {
-    color: '#EF4444',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
   previewImage: {
     width: '100%',
-    height: 200,
-    borderRadius: 12,
-    backgroundColor: '#F0F0F0',
+    height: 220,
+    borderRadius: 16,
   },
   noPhotoContainer: {
     width: '100%',
-    height: 150,
-    borderRadius: 12,
-    backgroundColor: '#F9FAFB',
+    height: 160,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
   },
   noPhotoText: {
-    marginTop: 10,
-    fontSize: 14,
-    color: '#9CA3AF',
-    fontWeight: '500',
+    marginTop: 12,
+    fontSize: 15,
+    fontWeight: '600',
   },
   notesText: {
-    fontSize: 15,
-    color: '#333',
-    lineHeight: 24,
+    fontSize: 16,
+    lineHeight: 26,
   },
   actionContainer: {
     flexDirection: 'row',
@@ -252,63 +221,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
     gap: 15,
   },
-  editButton: {
-    flex: 1,
-    flexDirection: 'row',
-    height: 56,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#EEF2FF',
-    borderWidth: 1,
-    borderColor: '#4F46E5',
-  },
-  editButtonText: {
-    color: '#4F46E5',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
-  submitButton: {
-    flex: 1,
-    flexDirection: 'row',
-    height: 56,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#4F46E5',
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
   emptyStateContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
   },
-  emptyStateText: {
-    marginTop: 15,
-    fontSize: 16,
-    color: '#6B7280',
-    marginBottom: 20,
-  },
-  backButton: {
-    backgroundColor: '#4F46E5',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  backButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  }
 });

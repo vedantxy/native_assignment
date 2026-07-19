@@ -6,17 +6,20 @@ import {
   Pressable, 
   Image, 
   Alert, 
-  ActivityIndicator,
-  SafeAreaView
+  ActivityIndicator
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
+import { AppButton } from '../../components/AppButton';
 
 export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<string | null>(null);
   const [captureTime, setCaptureTime] = useState<string | null>(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
+  const { theme } = useTheme();
   
   // Use any to avoid complex typing for the camera ref in this quick implementation
   const cameraRef = useRef<any>(null);
@@ -24,8 +27,8 @@ export default function CameraScreen() {
   if (!permission) {
     // Camera permissions are still loading.
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#4F46E5" />
+      <View style={[styles.centerContainer, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -33,12 +36,10 @@ export default function CameraScreen() {
   if (!permission.granted) {
     // Camera permissions are not granted yet.
     return (
-      <View style={styles.centerContainer}>
-        <Ionicons name="camera-outline" size={64} color="#ccc" style={{ marginBottom: 20 }} />
-        <Text style={styles.message}>We need your permission to show the camera</Text>
-        <Pressable style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>Grant Permission</Text>
-        </Pressable>
+      <View style={[styles.centerContainer, { backgroundColor: theme.colors.background }]}>
+        <Ionicons name="camera-outline" size={64} color={theme.colors.textMuted} style={{ marginBottom: 20 }} />
+        <Text style={[styles.message, { color: theme.colors.text }]}>We need your permission to show the camera</Text>
+        <AppButton title="Grant Permission" onPress={requestPermission} />
       </View>
     );
   }
@@ -54,7 +55,7 @@ export default function CameraScreen() {
         // Record capture time
         const now = new Date();
         setCaptureTime(now.toLocaleString());
-      } catch (error) {
+      } catch {
         Alert.alert("Error", "Failed to capture photo.");
       }
     }
@@ -125,8 +126,8 @@ export default function CameraScreen() {
           </CameraView>
         </View>
       ) : (
-        <View style={styles.previewContainer}>
-          <Text style={styles.previewTitle}>Photo Preview</Text>
+        <View style={[styles.previewContainer, { backgroundColor: theme.colors.background }]}>
+          <Text style={[styles.previewTitle, { color: theme.colors.text }]}>Photo Preview</Text>
           
           <View style={styles.imageWrapper}>
             <Image source={{ uri: photo }} style={styles.previewImage} />
@@ -137,15 +138,21 @@ export default function CameraScreen() {
           </View>
 
           <View style={styles.actionButtons}>
-            <Pressable style={[styles.actionBtn, styles.retakeBtn]} onPress={handleRetake}>
-              <Ionicons name="refresh-outline" size={24} color="#fff" />
-              <Text style={styles.actionBtnText}>Retake</Text>
-            </Pressable>
+            <AppButton 
+              title="Retake" 
+              onPress={handleRetake} 
+              variant="primary"
+              leftIcon={<Ionicons name="refresh-outline" size={20} color="#fff" />}
+              style={{ flex: 1 }}
+            />
             
-            <Pressable style={[styles.actionBtn, styles.deleteBtn]} onPress={handleDelete}>
-              <Ionicons name="trash-outline" size={24} color="#fff" />
-              <Text style={styles.actionBtnText}>Delete</Text>
-            </Pressable>
+            <AppButton 
+              title="Delete" 
+              onPress={handleDelete} 
+              variant="danger"
+              leftIcon={<Ionicons name="trash-outline" size={20} color="#fff" />}
+              style={{ flex: 1 }}
+            />
           </View>
         </View>
       )}
@@ -162,24 +169,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
     padding: 20,
   },
   message: {
     textAlign: 'center',
     paddingBottom: 20,
-    fontSize: 16,
-    color: '#333',
-  },
-  permissionButton: {
-    backgroundColor: '#4F46E5',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  permissionButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
     fontSize: 16,
   },
   cameraContainer: {
@@ -245,12 +239,10 @@ const styles = StyleSheet.create({
   },
   previewContainer: {
     flex: 1,
-    backgroundColor: '#111',
     padding: 20,
     justifyContent: 'center',
   },
   previewTitle: {
-    color: '#fff',
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
@@ -294,25 +286,5 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 30,
     gap: 15,
-  },
-  actionBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    height: 56,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  retakeBtn: {
-    backgroundColor: '#4F46E5',
-  },
-  deleteBtn: {
-    backgroundColor: '#EF4444',
-  },
-  actionBtnText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
+  }
 });

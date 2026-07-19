@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type Survey = {
   id: string;
@@ -60,6 +61,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [surveys, setSurveys] = useState<Survey[]>(MOCK_SURVEYS);
   const [profile, setProfile] = useState<ProfileData>(DEFAULT_PROFILE);
   const [settings, setSettings] = useState<SettingsData>(DEFAULT_SETTINGS);
+
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const storedSurveys = await AsyncStorage.getItem('surveys');
+        const storedProfile = await AsyncStorage.getItem('profile');
+        const storedSettings = await AsyncStorage.getItem('settings');
+
+        if (storedSurveys) setSurveys(JSON.parse(storedSurveys));
+        if (storedProfile) setProfile(JSON.parse(storedProfile));
+        if (storedSettings) setSettings(JSON.parse(storedSettings));
+      } catch (e) {
+        console.error('Failed to load data', e);
+      } finally {
+        setIsReady(true);
+      }
+    };
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (isReady) {
+      AsyncStorage.setItem('surveys', JSON.stringify(surveys));
+    }
+  }, [surveys, isReady]);
+
+  useEffect(() => {
+    if (isReady) {
+      AsyncStorage.setItem('profile', JSON.stringify(profile));
+    }
+  }, [profile, isReady]);
+
+  useEffect(() => {
+    if (isReady) {
+      AsyncStorage.setItem('settings', JSON.stringify(settings));
+    }
+  }, [settings, isReady]);
 
   const addSurvey = (survey: Survey) => {
     setSurveys((prev) => [survey, ...prev]);

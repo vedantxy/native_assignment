@@ -1,249 +1,273 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useNavigation } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
 import { useAppContext } from '@/context/AppContext';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../../../context/ThemeContext';
+import { ScreenContainer } from '../../../components/ScreenContainer';
+import { AppCard } from '../../../components/AppCard';
+import { SectionHeader } from '../../../components/SectionHeader';
+import { AppBadge } from '../../../components/AppBadge';
 
 export default function DashboardScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { surveys, profile } = useAppContext();
+  const { theme } = useTheme();
   
   const highPriorityCount = surveys.filter(s => s.priority === 'High').length;
-  const recentSurveys = surveys.slice(0, 2);
+  const recentSurveys = surveys.slice(0, 3);
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning,';
+    if (hour < 18) return 'Good Afternoon,';
+    return 'Good Evening,';
+  };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
-        {/* Custom App Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Good Morning,</Text>
-            <Text style={styles.headerTitle}>Welcome Back 👋</Text>
-          </View>
-          <Pressable 
-            style={styles.menuButton} 
-            onPress={() => {
-              navigation.dispatch(DrawerActions.openDrawer());
-            }}
-          >
-            <Ionicons name="menu" size={28} color="#333" />
-          </Pressable>
+    <ScreenContainer scrollable>
+      {/* Custom App Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={[styles.greeting, { color: theme.colors.textMuted }]}>{getGreeting()}</Text>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Welcome Back 👋</Text>
         </View>
+        <Pressable 
+          style={[styles.menuButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]} 
+          onPress={() => {
+            navigation.dispatch(DrawerActions.openDrawer());
+          }}
+        >
+          <Ionicons name="menu" size={28} color={theme.colors.text} />
+        </Pressable>
+      </View>
 
-        {/* Student Details Card */}
-        <View style={styles.studentCard}>
-          <View style={styles.studentIconContainer}>
-            <Ionicons name="person" size={32} color="#fff" />
-          </View>
-          <View style={styles.studentInfo}>
-            <Text style={styles.studentName}>{profile.name}</Text>
-            <Text style={styles.studentDetails}>ID: {profile.employeeId}</Text>
-          </View>
+      {/* Inspector Details Card */}
+      <LinearGradient
+        colors={[theme.colors.primary, theme.colors.primaryDark]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.inspectorCard}
+      >
+        <View style={styles.inspectorIconContainer}>
+          <Ionicons name="shield-checkmark" size={32} color="#fff" />
         </View>
+        <View style={styles.inspectorInfo}>
+          <Text style={styles.inspectorName}>{profile.name}</Text>
+          <Text style={styles.inspectorDetails}>Inspector ID: {profile.employeeId}</Text>
+        </View>
+      </LinearGradient>
 
-        {/* Stats */}
-        <View style={styles.statsContainer}>
-          <View style={[styles.statCard, { backgroundColor: '#E3F2FD' }]}>
-            <Ionicons name="document-text" size={32} color="#1E88E5" />
-            <Text style={styles.statNumber}>{surveys.length}</Text>
-            <Text style={styles.statLabel}>Total Surveys</Text>
+      {/* Stats */}
+      <View style={styles.statsContainer}>
+        <AppCard style={[styles.statCard, { backgroundColor: theme.colors.infoLight, borderColor: theme.colors.info, borderWidth: 1 }]} elevation="low">
+          <View style={[styles.statIconWrapper, { backgroundColor: '#fff' }]}>
+            <Ionicons name="document-text" size={24} color={theme.colors.info} />
           </View>
-          <View style={[styles.statCard, { backgroundColor: '#FFEBEE' }]}>
-            <Ionicons name="alert-circle" size={32} color="#E53935" />
-            <Text style={styles.statNumber}>{highPriorityCount}</Text>
-            <Text style={styles.statLabel}>High Priority</Text>
+          <Text style={[styles.statNumber, { color: theme.colors.info }]}>{surveys.length}</Text>
+          <Text style={[styles.statLabel, { color: theme.colors.textMuted }]}>Total Surveys</Text>
+        </AppCard>
+
+        <AppCard style={[styles.statCard, { backgroundColor: theme.colors.dangerLight, borderColor: theme.colors.danger, borderWidth: 1 }]} elevation="low">
+          <View style={[styles.statIconWrapper, { backgroundColor: '#fff' }]}>
+            <Ionicons name="alert-circle" size={24} color={theme.colors.danger} />
           </View>
-        </View>
+          <Text style={[styles.statNumber, { color: theme.colors.danger }]}>{highPriorityCount}</Text>
+          <Text style={[styles.statLabel, { color: theme.colors.textMuted }]}>High Priority</Text>
+        </AppCard>
+      </View>
 
-        {/* Quick Action Cards */}
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.actionsContainer}>
-          <Pressable 
-            style={styles.actionCard} 
-            onPress={() => router.push('/(drawer)/(tabs)/new_survey')}
+      {/* Quick Action Cards */}
+      <SectionHeader title="Quick Actions" />
+      <View style={styles.actionsContainer}>
+        <Pressable 
+          style={[styles.actionCard, { backgroundColor: theme.colors.surface }]} 
+          onPress={() => router.push('/(drawer)/(tabs)/new_survey')}
+        >
+          <View style={[styles.actionIcon, { backgroundColor: theme.colors.warningLight }]}>
+            <Ionicons name="add-circle" size={28} color={theme.colors.warning} />
+          </View>
+          <Text style={[styles.actionText, { color: theme.colors.text }]}>New Survey</Text>
+        </Pressable>
+
+        <Pressable 
+          style={[styles.actionCard, { backgroundColor: theme.colors.surface }]} 
+          onPress={() => router.push('/(drawer)/(tabs)/history')}
+        >
+          <View style={[styles.actionIcon, { backgroundColor: theme.colors.primaryLight }]}>
+            <Ionicons name="time" size={28} color={theme.colors.primary} />
+          </View>
+          <Text style={[styles.actionText, { color: theme.colors.text }]}>History</Text>
+        </Pressable>
+
+        <Pressable 
+          style={[styles.actionCard, { backgroundColor: theme.colors.surface }]} 
+          onPress={() => router.push('/(drawer)/camera')}
+        >
+          <View style={[styles.actionIcon, { backgroundColor: theme.colors.infoLight }]}>
+            <Ionicons name="camera" size={28} color={theme.colors.info} />
+          </View>
+          <Text style={[styles.actionText, { color: theme.colors.text }]}>Camera</Text>
+        </Pressable>
+
+        <Pressable 
+          style={[styles.actionCard, { backgroundColor: theme.colors.surface }]} 
+          onPress={() => router.push('/(drawer)/location')}
+        >
+          <View style={[styles.actionIcon, { backgroundColor: theme.colors.dangerLight }]}>
+            <Ionicons name="location" size={28} color={theme.colors.danger} />
+          </View>
+          <Text style={[styles.actionText, { color: theme.colors.text }]}>Location</Text>
+        </Pressable>
+      </View>
+
+      {/* Recent Survey Summary */}
+      <SectionHeader title="Recent Surveys" />
+      <AppCard style={styles.recentContainer} elevation="low">
+        {recentSurveys.length > 0 ? recentSurveys.map((survey, index) => (
+          <View 
+            key={survey.id} 
+            style={[
+              styles.recentItem,
+              { borderBottomColor: theme.colors.border },
+              index === recentSurveys.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }
+            ]}
           >
-            <View style={[styles.actionIcon, { backgroundColor: '#FFF3E0' }]}>
-              <Ionicons name="add-circle" size={28} color="#F57C00" />
+            <View style={[styles.recentIcon, { backgroundColor: theme.colors.background }]}>
+              <Ionicons name="map" size={20} color={theme.colors.textMuted} />
             </View>
-            <Text style={styles.actionText}>New Survey</Text>
-          </Pressable>
-
-          <Pressable 
-            style={styles.actionCard} 
-            onPress={() => router.push('/(drawer)/(tabs)/history')}
-          >
-            <View style={[styles.actionIcon, { backgroundColor: '#F3E5F5' }]}>
-              <Ionicons name="time" size={28} color="#8E24AA" />
+            <View style={styles.recentDetails}>
+              <Text style={[styles.recentTitle, { color: theme.colors.text }]}>{survey.siteName}</Text>
+              <Text style={[styles.recentDate, { color: theme.colors.textMuted }]}>{survey.date}</Text>
             </View>
-            <Text style={styles.actionText}>History</Text>
-          </Pressable>
-
-          <Pressable 
-            style={styles.actionCard} 
-            onPress={() => router.push('/(drawer)/camera')}
-          >
-            <View style={[styles.actionIcon, { backgroundColor: '#E0F7FA' }]}>
-              <Ionicons name="camera" size={28} color="#00ACC1" />
-            </View>
-            <Text style={styles.actionText}>Camera</Text>
-          </Pressable>
-
-          <Pressable 
-            style={styles.actionCard} 
-            onPress={() => router.push('/(drawer)/location')}
-          >
-            <View style={[styles.actionIcon, { backgroundColor: '#FFEBEE' }]}>
-              <Ionicons name="location" size={28} color="#E53935" />
-            </View>
-            <Text style={styles.actionText}>Location</Text>
-          </Pressable>
-        </View>
-
-        {/* Recent Survey Summary */}
-        <Text style={styles.sectionTitle}>Recent Surveys</Text>
-        <View style={styles.recentContainer}>
-          {recentSurveys.length > 0 ? recentSurveys.map(survey => (
-            <View key={survey.id} style={styles.recentItem}>
-              <View style={styles.recentIcon}>
-                <Ionicons name="map" size={24} color="#666" />
-              </View>
-              <View style={styles.recentDetails}>
-                <Text style={styles.recentTitle}>{survey.siteName}</Text>
-                <Text style={styles.recentDate}>{survey.date}</Text>
-              </View>
-              <View style={survey.priority === 'High' ? styles.statusBadgePending : styles.statusBadge}>
-                <Text style={survey.priority === 'High' ? styles.statusTextPending : styles.statusText}>
-                  {survey.priority}
-                </Text>
-              </View>
-            </View>
-          )) : (
-            <Text style={{ textAlign: 'center', color: '#666', padding: 10 }}>No recent surveys.</Text>
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            <AppBadge 
+              label={survey.priority} 
+              variant={survey.priority === 'High' ? 'danger' : (survey.priority === 'Medium' ? 'warning' : 'success')} 
+            />
+          </View>
+        )) : (
+          <Text style={{ textAlign: 'center', color: theme.colors.textMuted, padding: 10 }}>No recent surveys.</Text>
+        )}
+      </AppCard>
+      
+      <View style={{ height: 80 }} />
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  container: {
-    padding: 20,
-    paddingBottom: 40,
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 25,
-    marginTop: 10,
+    marginBottom: 24,
+    marginTop: 8,
   },
   greeting: {
     fontSize: 16,
-    color: '#666',
     marginBottom: 4,
+    fontWeight: '500',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '800',
-    color: '#1A1A1A',
+    letterSpacing: -0.5,
   },
   menuButton: {
-    padding: 10,
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowRadius: 10,
     elevation: 2,
+    borderWidth: 1,
   },
-  studentCard: {
-    backgroundColor: '#4F46E5',
-    borderRadius: 20,
-    padding: 20,
+  inspectorCard: {
+    borderRadius: 24,
+    padding: 24,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 25,
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
     elevation: 8,
   },
-  studentIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  inspectorIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.25)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)',
   },
-  studentInfo: {
+  inspectorInfo: {
     flex: 1,
   },
-  studentName: {
+  inspectorName: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 4,
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
-  studentDetails: {
-    color: '#E0E7FF',
-    fontSize: 13,
-    fontWeight: '500',
+  inspectorDetails: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
+    fontWeight: '600',
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 25,
+    marginBottom: 24,
   },
   statCard: {
     flex: 1,
-    borderRadius: 20,
-    padding: 20,
-    marginHorizontal: 5,
+    marginHorizontal: 6,
     alignItems: 'flex-start',
+    padding: 20,
+    marginBottom: 0,
+  },
+  statIconWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   statNumber: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '900',
-    color: '#1A1A1A',
-    marginTop: 12,
+    marginTop: 16,
     marginBottom: 4,
+    letterSpacing: -1,
   },
   statLabel: {
     fontSize: 14,
-    color: '#666',
     fontWeight: '600',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1A1A1A',
-    marginBottom: 16,
-    marginLeft: 4,
   },
   actionsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 25,
+    marginBottom: 24,
   },
   actionCard: {
     width: '48%',
-    backgroundColor: '#fff',
     borderRadius: 20,
     padding: 16,
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
@@ -261,30 +285,20 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
   },
   recentContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
   recentItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   recentIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#F5F5F5',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -295,33 +309,9 @@ const styles = StyleSheet.create({
   recentTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#1A1A1A',
     marginBottom: 4,
   },
   recentDate: {
     fontSize: 12,
-    color: '#888',
-  },
-  statusBadge: {
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    color: '#43A047',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  statusBadgePending: {
-    backgroundColor: '#FFF3E0',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusTextPending: {
-    color: '#F57C00',
-    fontSize: 12,
-    fontWeight: '600',
   },
 });

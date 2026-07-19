@@ -3,8 +3,6 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  ScrollView, 
-  TextInput, 
   Pressable, 
   Alert,
   KeyboardAvoidingView,
@@ -15,10 +13,18 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useAppContext } from '@/context/AppContext';
+import Animated, { useSharedValue, useAnimatedStyle, withSequence, withTiming } from 'react-native-reanimated';
+import { useTheme } from '../../../context/ThemeContext';
+import { ScreenContainer } from '../../../components/ScreenContainer';
+import { AppCard } from '../../../components/AppCard';
+import { AppInput } from '../../../components/AppInput';
+import { AppButton } from '../../../components/AppButton';
+import { SectionHeader } from '../../../components/SectionHeader';
 
 export default function NewSurveyScreen() {
   const router = useRouter();
   const { addSurvey } = useAppContext();
+  const { theme } = useTheme();
 
   // Form State
   const [siteName, setSiteName] = useState('');
@@ -30,6 +36,24 @@ export default function NewSurveyScreen() {
 
   // Validation State
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Animation
+  const shakeOffset = useSharedValue(0);
+
+  const shakeAnimation = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: shakeOffset.value }],
+    };
+  });
+
+  const triggerShake = () => {
+    shakeOffset.value = withSequence(
+      withTiming(10, { duration: 50 }),
+      withTiming(-10, { duration: 50 }),
+      withTiming(10, { duration: 50 }),
+      withTiming(0, { duration: 50 })
+    );
+  };
 
   const validateForm = () => {
     let isValid = true;
@@ -56,6 +80,8 @@ export default function NewSurveyScreen() {
     return isValid;
   };
 
+  const isFormValid = siteName.trim() !== '' && clientName.trim() !== '' && description.trim() !== '' && date.trim() !== '';
+
   const handleSubmit = () => {
     if (validateForm()) {
       addSurvey({
@@ -75,7 +101,6 @@ export default function NewSurveyScreen() {
           { 
             text: 'OK', 
             onPress: () => {
-              // Reset form or navigate away
               setSiteName('');
               setClientName('');
               setDescription('');
@@ -88,7 +113,7 @@ export default function NewSurveyScreen() {
         ]
       );
     } else {
-      Alert.alert('Validation Error', 'Please fill in all required fields.');
+      triggerShake();
     }
   };
 
@@ -103,7 +128,7 @@ export default function NewSurveyScreen() {
       <Text 
         style={[
           styles.priorityText, 
-          priority === level && styles.priorityTextActive
+          { color: priority === level ? '#fff' : theme.colors.textMuted }
         ]}
       >
         {level}
@@ -147,257 +172,150 @@ export default function NewSurveyScreen() {
 
   return (
     <KeyboardAvoidingView 
-      style={{ flex: 1 }} 
+      style={{ flex: 1, backgroundColor: theme.colors.background }} 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Create New Survey</Text>
-          <Text style={styles.headerSubtitle}>Fill out the inspection details below</Text>
-        </View>
+      <ScreenContainer scrollable>
+        <SectionHeader 
+          title="Create New Survey" 
+          subtitle="Fill out the inspection details below"
+        />
 
-        <View style={styles.formContainer}>
-          {/* Site Name */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Site Name *</Text>
-            <View style={[styles.inputWrapper, errors.siteName ? styles.inputError : null]}>
-              <Ionicons name="business-outline" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter site name"
-                value={siteName}
-                onChangeText={(text) => {
-                  setSiteName(text);
-                  if (errors.siteName) setErrors({...errors, siteName: ''});
-                }}
-              />
-            </View>
-            {errors.siteName ? <Text style={styles.errorText}>{errors.siteName}</Text> : null}
-          </View>
+        <Animated.View style={shakeAnimation}>
+          <AppCard elevation="low">
+            <AppInput
+              label="Site Name *"
+              placeholder="Enter site name"
+              value={siteName}
+              onChangeText={(text) => {
+                setSiteName(text);
+                if (errors.siteName) setErrors({...errors, siteName: ''});
+              }}
+              error={errors.siteName}
+              leftIcon={<Ionicons name="business-outline" size={20} color={theme.colors.textMuted} />}
+            />
 
-          {/* Client Name */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Client Name *</Text>
-            <View style={[styles.inputWrapper, errors.clientName ? styles.inputError : null]}>
-              <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter client name"
-                value={clientName}
-                onChangeText={(text) => {
-                  setClientName(text);
-                  if (errors.clientName) setErrors({...errors, clientName: ''});
-                }}
-              />
-            </View>
-            {errors.clientName ? <Text style={styles.errorText}>{errors.clientName}</Text> : null}
-          </View>
+            <AppInput
+              label="Client Name *"
+              placeholder="Enter client name"
+              value={clientName}
+              onChangeText={(text) => {
+                setClientName(text);
+                if (errors.clientName) setErrors({...errors, clientName: ''});
+              }}
+              error={errors.clientName}
+              leftIcon={<Ionicons name="person-outline" size={20} color={theme.colors.textMuted} />}
+            />
 
-          {/* Date */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Date *</Text>
-            <View style={[styles.inputWrapper, errors.date ? styles.inputError : null]}>
-              <Ionicons name="calendar-outline" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="YYYY-MM-DD"
-                value={date}
-                onChangeText={(text) => {
-                  setDate(text);
-                  if (errors.date) setErrors({...errors, date: ''});
-                }}
-              />
-            </View>
-            {errors.date ? <Text style={styles.errorText}>{errors.date}</Text> : null}
-          </View>
+            <AppInput
+              label="Date *"
+              placeholder="YYYY-MM-DD"
+              value={date}
+              onChangeText={(text) => {
+                setDate(text);
+                if (errors.date) setErrors({...errors, date: ''});
+              }}
+              error={errors.date}
+              leftIcon={<Ionicons name="calendar-outline" size={20} color={theme.colors.textMuted} />}
+            />
 
-          {/* Priority */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Priority *</Text>
-            <View style={styles.priorityContainer}>
-              <PriorityButton level="Low" color="#4CAF50" />
-              <PriorityButton level="Medium" color="#FF9800" />
-              <PriorityButton level="High" color="#F44336" />
-            </View>
-          </View>
-
-          {/* Inspection Photo */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Inspection Photo</Text>
-            
-            {photoUri ? (
-              <View style={styles.imagePreviewContainer}>
-                <Image source={{ uri: photoUri }} style={styles.previewImage} />
-                <Pressable style={styles.removeImageButton} onPress={() => setPhotoUri(null)}>
-                  <Ionicons name="close-circle" size={24} color="#EF4444" />
-                </Pressable>
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: theme.colors.textMuted }]}>Priority *</Text>
+              <View style={[styles.priorityContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+                <PriorityButton level="Low" color={theme.colors.success} />
+                <PriorityButton level="Medium" color={theme.colors.warning} />
+                <PriorityButton level="High" color={theme.colors.danger} />
               </View>
-            ) : (
-              <View style={styles.photoButtonsContainer}>
-                <Pressable style={styles.photoButton} onPress={takePhoto}>
-                  <Ionicons name="camera-outline" size={24} color="#4F46E5" />
-                  <Text style={styles.photoButtonText}>Take Photo</Text>
-                </Pressable>
-                <Pressable style={styles.photoButton} onPress={pickImage}>
-                  <Ionicons name="image-outline" size={24} color="#4F46E5" />
-                  <Text style={styles.photoButtonText}>Gallery</Text>
-                </Pressable>
-              </View>
-            )}
-          </View>
-
-          {/* Description */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Description *</Text>
-            <View style={[styles.textAreaWrapper, errors.description ? styles.inputError : null]}>
-              <TextInput
-                style={styles.textArea}
-                placeholder="Describe the inspection findings..."
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-                value={description}
-                onChangeText={(text) => {
-                  setDescription(text);
-                  if (errors.description) setErrors({...errors, description: ''});
-                }}
-              />
             </View>
-            {errors.description ? <Text style={styles.errorText}>{errors.description}</Text> : null}
-          </View>
 
-          {/* Submit Button */}
-          <Pressable style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>Create Survey</Text>
-            <Ionicons name="arrow-forward" size={20} color="#fff" />
-          </Pressable>
-        </View>
-      </ScrollView>
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: theme.colors.textMuted }]}>Inspection Photo</Text>
+              {photoUri ? (
+                <View style={styles.imagePreviewContainer}>
+                  <Image source={{ uri: photoUri }} style={styles.previewImage} />
+                  <Pressable style={styles.removeImageButton} onPress={() => setPhotoUri(null)}>
+                    <Ionicons name="close-circle" size={24} color={theme.colors.danger} />
+                  </Pressable>
+                </View>
+              ) : (
+                <View style={styles.photoButtonsContainer}>
+                  <AppButton 
+                    title="Take Photo" 
+                    onPress={takePhoto} 
+                    variant="outline" 
+                    leftIcon={<Ionicons name="camera-outline" size={20} color={theme.colors.primary} />}
+                    style={styles.photoButton}
+                  />
+                  <AppButton 
+                    title="Gallery" 
+                    onPress={pickImage} 
+                    variant="outline" 
+                    leftIcon={<Ionicons name="image-outline" size={20} color={theme.colors.primary} />}
+                    style={styles.photoButton}
+                  />
+                </View>
+              )}
+            </View>
+
+            <AppInput
+              label="Description *"
+              placeholder="Describe the inspection findings..."
+              value={description}
+              onChangeText={(text) => {
+                setDescription(text);
+                if (errors.description) setErrors({...errors, description: ''});
+              }}
+              error={errors.description}
+              multiline
+              numberOfLines={4}
+              style={{ minHeight: 100, textAlignVertical: 'top' }}
+            />
+
+            <AppButton
+              title="Create Survey"
+              onPress={handleSubmit}
+              disabled={!isFormValid}
+              rightIcon={<Ionicons name="arrow-forward" size={20} color="#fff" />}
+              style={{ marginTop: 10 }}
+              size="large"
+            />
+          </AppCard>
+        </Animated.View>
+        <View style={{ height: 100 }} />
+      </ScreenContainer>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: '#F8F9FA',
-    flexGrow: 1,
-  },
-  header: {
-    marginBottom: 25,
-    marginTop: 10,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#1A1A1A',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 15,
-    color: '#666',
-  },
-  formContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-  },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 8,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F7FA',
-    borderWidth: 1,
-    borderColor: '#E4E7EB',
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    height: 52,
-  },
-  inputError: {
-    borderColor: '#EF4444',
-    backgroundColor: '#FEF2F2',
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    fontSize: 15,
-    color: '#1A1A1A',
-  },
-  textAreaWrapper: {
-    backgroundColor: '#F5F7FA',
-    borderWidth: 1,
-    borderColor: '#E4E7EB',
-    borderRadius: 12,
-    padding: 15,
-  },
-  textArea: {
-    fontSize: 15,
-    color: '#1A1A1A',
-    minHeight: 100,
-  },
-  errorText: {
-    color: '#EF4444',
-    fontSize: 12,
-    marginTop: 6,
-    marginLeft: 4,
+    letterSpacing: 0.2,
   },
   priorityContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 10,
+    gap: 12,
+    padding: 6,
+    borderRadius: 16,
+    borderWidth: 1,
   },
   priorityButton: {
     flex: 1,
-    height: 44,
-    borderWidth: 1,
-    borderColor: '#E4E7EB',
-    borderRadius: 10,
+    height: 40,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   priorityText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#666',
-  },
-  priorityTextActive: {
-    color: '#fff',
-  },
-  submitButton: {
-    backgroundColor: '#4F46E5',
-    flexDirection: 'row',
-    height: 56,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginRight: 8,
   },
   photoButtonsContainer: {
     flexDirection: 'row',
@@ -405,39 +323,29 @@ const styles = StyleSheet.create({
   },
   photoButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 52,
-    backgroundColor: '#EEF2FF',
-    borderWidth: 1,
-    borderColor: '#4F46E5',
-    borderRadius: 12,
-  },
-  photoButtonText: {
-    marginLeft: 8,
-    color: '#4F46E5',
-    fontSize: 15,
-    fontWeight: '600',
   },
   imagePreviewContainer: {
     position: 'relative',
     width: '100%',
-    height: 200,
-    borderRadius: 12,
+    height: 220,
+    borderRadius: 16,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
   },
   previewImage: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#F0F0F0',
+    backgroundColor: '#F1F5F9',
   },
   removeImageButton: {
     position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 16,
     padding: 2,
   }
 });

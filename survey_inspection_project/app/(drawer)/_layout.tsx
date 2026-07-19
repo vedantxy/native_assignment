@@ -6,23 +6,25 @@ import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppContext } from '@/context/AppContext';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../../context/ThemeContext';
 
 function CustomDrawerContent(props: any) {
   const insets = useSafeAreaInsets();
   const { profile } = useAppContext();
+  const { theme } = useTheme();
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F5F7FA' }}>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <DrawerContentScrollView 
         {...props} 
         bounces={false}
         contentContainerStyle={{ paddingTop: 0 }}
       >
         <LinearGradient
-          colors={['#5B4FE9', '#4338CA']}
+          colors={[theme.colors.primary, theme.colors.primary]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.headerGradient, { paddingTop: insets.top + 40 }]}
+          style={[styles.headerGradient, { paddingTop: insets.top + 40, shadowColor: theme.colors.primary }]}
         >
           <View style={styles.avatarPlaceholder}>
             <Text style={styles.avatarText}>
@@ -58,47 +60,49 @@ function CustomDrawerContent(props: any) {
                 onPress={() => props.navigation.navigate(route.name)}
                 style={({ pressed }) => [
                   styles.menuItem,
-                  isFocused && styles.menuItemActive,
+                  isFocused && { backgroundColor: theme.colors.primaryLight },
                   pressed && { opacity: 0.7 }
                 ]}
               >
                 <View style={styles.menuItemContent}>
                   <View style={[
                     styles.iconContainer,
-                    isFocused ? styles.iconContainerActive : styles.iconContainerInactive
+                    isFocused ? { backgroundColor: theme.colors.primary } : { backgroundColor: theme.colors.surface }
                   ]}>
                     <Ionicons 
                       name={iconName as any} 
                       size={18} 
-                      color={isFocused ? '#fff' : '#4338CA'} 
+                      color={isFocused ? '#fff' : theme.colors.primary} 
                     />
                   </View>
                   <Text style={[
                     styles.menuLabel,
-                    isFocused && styles.menuLabelActive
+                    { color: theme.colors.textMuted },
+                    isFocused && { color: theme.colors.primary, fontWeight: 'bold' }
                   ]}>
                     {label}
                   </Text>
                 </View>
-                {isFocused && <View style={styles.activeIndicator} />}
+                {isFocused && <View style={[styles.activeIndicator, { backgroundColor: theme.colors.primary }]} />}
               </Pressable>
             );
           })}
         </View>
       </DrawerContentScrollView>
       
-      <View style={[styles.drawerFooter, { paddingBottom: Math.max(insets.bottom, 20) }]}>
+      <View style={[styles.drawerFooter, { borderTopColor: theme.colors.border, paddingBottom: Math.max(insets.bottom, 20) }]}>
         <Pressable 
           style={({ pressed }) => [
             styles.logoutButton,
+            { backgroundColor: theme.colors.dangerLight },
             pressed && { opacity: 0.7 }
           ]} 
           onPress={() => {
              // Handle logout
           }}
         >
-          <Ionicons name="log-out-outline" size={22} color="#E53935" />
-          <Text style={styles.logoutText}>Sign Out</Text>
+          <Ionicons name="log-out-outline" size={22} color={theme.colors.danger} />
+          <Text style={[styles.logoutText, { color: theme.colors.danger }]}>Sign Out</Text>
         </Pressable>
       </View>
     </View>
@@ -106,6 +110,8 @@ function CustomDrawerContent(props: any) {
 }
 
 export default function DrawerLayout() {
+  const { theme } = useTheme();
+  
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer 
@@ -114,6 +120,7 @@ export default function DrawerLayout() {
           headerShown: false,
           drawerStyle: {
             width: '80%',
+            backgroundColor: theme.colors.background
           }
         }}
       >
@@ -175,94 +182,92 @@ const styles = StyleSheet.create({
   headerGradient: {
     paddingHorizontal: 25,
     paddingBottom: 30,
+    borderBottomRightRadius: 30,
+    marginBottom: 10,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 8,
   },
   avatarPlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
   },
   avatarText: {
     color: '#fff',
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
   },
   profileName: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 4,
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   profileId: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontSize: 14,
+    fontWeight: '500',
   },
   menuContainer: {
-    paddingTop: 15,
+    paddingTop: 10,
     paddingHorizontal: 15,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 12,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 8,
-  },
-  menuItemActive: {
-    backgroundColor: '#EDEBFF',
   },
   menuItemContent: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   iconContainer: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
   },
-  iconContainerInactive: {
-    backgroundColor: '#F0EEFF',
-  },
-  iconContainerActive: {
-    backgroundColor: '#4338CA',
-  },
   menuLabel: {
-    fontSize: 15,
-    color: '#333',
-    fontWeight: '500',
-  },
-  menuLabelActive: {
-    color: '#4338CA',
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '600',
   },
   activeIndicator: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#4338CA',
   },
   drawerFooter: {
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
     paddingHorizontal: 25,
     paddingTop: 20,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    justifyContent: 'center',
   },
   logoutText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#E53935',
-    marginLeft: 15,
+    marginLeft: 10,
   }
 });
